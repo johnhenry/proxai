@@ -4,11 +4,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Test Chat</title>
     <style>
+      html {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      h1 {
+        font-size: 2rem;
+      }
       main {
         display: flex;
         align-items: start;
         justify-content: space-evenly;
-        flex-direction: column;
+        flex-direction: column-reverse;
         @media (orientation: landscape) {
           flex-direction: row;
         }
@@ -47,76 +53,109 @@
   <body>
     <main>
       <section>
-        <h2>Config</h2>
-        <template id="template-server">
-          <fieldset>
-            <label> Name <input name="name" required /> </label>
-            <label> URL <input name="url" required /> </label>
-            <label> Model <input name="model" required /> </label>
-            <label> Key <input name="key" type="password" /> </label>
-            <button type="button" onclick="this.parentElement.remove()">
-              ×
-            </button>
-            <input type="radio" name="last" inert />
-          </fieldset>
-        </template>
-        <form id="form-config" method="POST" action="/config">
-          <lable>
-            Sticky
-            <input
-              type="checkbox"
-              name="sticky"
-              title="sticky"
-              onchange="updateConfig()"
-            />
-          </lable>
-          <lable>
-            Random
-            <input
-              type="checkbox"
-              name="random"
-              title="random"
-              onchange="updateConfig()"
-            />
-          </lable>
-          <button
-            id="button-appendserver"
-            type="button"
-            onclick="appendServer()"
-          >
-            +
-          </button>
-          <input type="button" value="update" onclick="updateConfig()" />
-        </form>
-      </section>
-      <section>
-        <h2>Test Chat</h2>
-        <template id="template-message">
-          <fieldset>
+        <header>
+          <h1>Robin Failover Proxy</h1>
+        </header>
+        <main>
+          <form id="form-config" method="POST" action="/config">
+            <template id="template-server-model">
+              <fieldset>
+                <input name="modelx" />
+                <button type="button" onclick="this.parentElement.remove()">
+                  ×
+                </button>
+              </fieldset>
+            </template>
+            <template id="template-server-header">
+              <fieldset>
+                <label>
+                  Header Name
+                  <input name="hname" placeholder="Authentication" required />
+                </label>
+                <label>
+                  Header Value
+                  <input
+                    name="hvalue"
+                    type="password"
+                    placeholder="Bearer *****"
+                    required
+                  />
+                </label>
+                <button type="button" onclick="this.parentElement.remove()">
+                  ×
+                </button>
+              </fieldset>
+            </template>
+            <template id="template-server">
+              <fieldset>
+                <label> Name <input name="name" required /> </label>
+                <label> URL <input name="url" required /> </label>
+                <label> Model <input name="model" required /> </label>
+                <button type="button" class="button-addmodel">Add Model</button>
+                <label> Key <input name="key" type="password" /> </label>
+                <button type="button" class="button-addheader">
+                  Add Header
+                </button>
+                <button type="button" onclick="this.parentElement.remove()">
+                  ×
+                </button>
+                <input type="radio" name="last" inert />
+              </fieldset>
+            </template>
+
+            <h2>Config</h2>
+            <lable>
+              Sticky
+              <input
+                type="checkbox"
+                name="sticky"
+                title="sticky"
+                onchange="updateConfig()"
+              />
+            </lable>
+            <lable>
+              Random
+              <input
+                type="checkbox"
+                name="random"
+                title="random"
+                onchange="updateConfig()"
+              />
+            </lable>
+            <input type="button" value="update" onclick="updateConfig()" />
+          </form>
+          <form id="form-test" method="POST" action="/messages">
+            <h2>Test Chat</h2>
             <label>
-              Role:
-              <select name="role">
-                <option selected>user</option>
-                <option>assistant</option>
-                <option>system</option>
-              </select>
+              Model Index
+              <input title="model index" name="model" value="0" />
             </label>
-            <label> Content: <textarea name="content"> </textarea></label>
-            <button type="button" onclick="this.parentElement.remove()">
-              ×
+            <template id="template-message">
+              <fieldset>
+                <label>
+                  Role:
+                  <select name="role">
+                    <option selected>user</option>
+                    <option>assistant</option>
+                    <option>system</option>
+                  </select>
+                </label>
+                <label> Content: <textarea name="content"> </textarea></label>
+                <button type="button" onclick="this.parentElement.remove()">
+                  ×
+                </button>
+              </fieldset>
+            </template>
+            <button
+              id="button-appendmessage"
+              type="button"
+              onclick="appendMessage()"
+            >
+              +
             </button>
-          </fieldset>
-        </template>
-        <form id="form-test" method="POST" action="/messages">
-          <button
-            id="button-appendmessage"
-            type="button"
-            onclick="appendMessage()"
-          >
-            +
-          </button>
-          <input type="button" value="test" onclick="sendMessage()" />
-        </form>
+            <input type="button" value="test" onclick="sendMessage()" />
+          </form>
+        </main>
       </section>
     </main>
     <dialog>Loading</dialog>
@@ -130,6 +169,33 @@
         loading = false;
         document.querySelector("dialog").style.display = "none";
       };
+      const addHeader = (button, { hname, hvalue } = {}) => {
+        const header = document.getElementById("template-server-header");
+        const fieldset = button.parentElement;
+        const clone = header.content.cloneNode(true);
+        clone.querySelector("[name=hname]").value = hname || "";
+        clone.querySelector("[name=hvalue]").value = hvalue || "";
+        fieldset.insertBefore(clone, button);
+      };
+      const addModel = (button, model = "") => {
+        const header = document.getElementById("template-server-model");
+        const fieldset = button.parentElement;
+        const clone = header.content.cloneNode(true);
+        clone.querySelector("[name=modelx]").value = model || "";
+        fieldset.insertBefore(clone, button);
+      };
+      document
+        .getElementById("form-config")
+        .addEventListener("click", (event) => {
+          if (event.target.classList.contains("button-addheader")) {
+            addHeader(event.target);
+            event.preventDefault();
+          }
+          if (event.target.classList.contains("button-addmodel")) {
+            addModel(event.target);
+            event.preventDefault();
+          }
+        });
       const appendMessage = ({ role = null, content = null } = {}) => {
         const message = document.getElementById("template-message");
         const form = document.getElementById("form-test");
@@ -144,6 +210,8 @@
         url = null,
         key = null,
         model,
+        models = [],
+        headers = {},
       } = {}) => {
         const server = document.getElementById("template-server");
         const form = document.getElementById("form-config");
@@ -153,12 +221,21 @@
         clone.querySelector("[name=url]").value = url || "";
         clone.querySelector("[name=key]").value = key || "";
         clone.querySelector("[name=model]").value = model || "";
+        const buttonAddModel = clone.querySelector(".button-addmodel");
+        const buttonAddHeader = clone.querySelector(".button-addheader");
+        Object.entries(headers).forEach(([hname, hvalue]) => {
+          addHeader(buttonAddHeader, { hname, hvalue });
+        });
+        models.forEach((model) => {
+          addModel(buttonAddModel, model);
+        });
         form.insertBefore(clone, button);
       };
       const setUsed = (used) => {
-        if (used === "") {
+        if (!used && used !== 0) {
           return;
         }
+
         const input = document.querySelectorAll(`[name=name]`)[used];
         // const input = getInputsByValue(used);
         const parent = input.closest("fieldset");
@@ -178,11 +255,22 @@
         try {
           startLoading();
           const formData = new FormData(document.getElementById("form-test"));
-          const response = await fetch("/messages", {
+          const roles = formData.getAll("role");
+          const contents = formData.getAll("content");
+          const model = Number(formData.get("model")) || 0;
+          const messages = [];
+          for (let i = 0; i < roles.length; i++) {
+            const [role, content] = [roles[i], contents[i]];
+            messages.push({
+              role,
+              content,
+            });
+          }
+          const response = await fetch("/", {
             method: "POST",
-            body: formData,
+            body: JSON.stringify({ model, messages }),
             headers: {
-              // "Content-Type": "application/x-www-form-urlencoded",
+              "Content-Type": "application/json",
             },
           });
           if (!response.ok) {
@@ -202,10 +290,59 @@
         }
         try {
           startLoading();
-          const formData = new FormData(document.getElementById("form-config"));
+          const formConfig = document.getElementById("form-config");
+          const formData = new FormData(formConfig);
+
+          const sticky = !!formData.get("sticky");
+          const random = !!formData.get("random");
+          const names = formData.getAll("name");
+          const urls = formData.getAll("url");
+          const keys = formData.getAll("key");
+          const models = formData.getAll("model");
+          const allHeaderNames = formData.getAll("hname");
+          const allHeaderValues = formData.getAll("hvalue");
+          const allModelValues = formData.getAll("modelx");
+          const headerLengths = [];
+          const modelLengths = [];
+          for (const fieldset of formConfig.querySelectorAll("&>fieldset")) {
+            modelLengths.push(
+              fieldset.querySelectorAll("[name=modelx]").length
+            );
+            headerLengths.push(
+              fieldset.querySelectorAll("[name=hname]").length
+            );
+          }
+          // construct array of items
+          const servers = [];
+          for (let i = 0; i < names.length; i++) {
+            const headers = {};
+            const modelxs = [];
+            for (let j = 0; j < headerLengths[i]; j++) {
+              const name = allHeaderNames.shift();
+              const value = allHeaderValues.shift();
+              headers[name] = value;
+            }
+            for (let j = 0; j < modelLengths[i]; j++) {
+              modelxs.push(allModelValues.shift());
+            }
+            servers.push({
+              name: names[i],
+              url: urls[i],
+              models: modelxs,
+              headers,
+            });
+          }
+          // TODO: remove key, model from config in favor of headers, models
           const response = await fetch("/config", {
             method: "POST",
-            body: formData,
+            body: JSON.stringify({
+              sticky,
+              random,
+              servers,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
           if (response.ok) {
             response.json().then((config) => {
@@ -227,8 +364,8 @@
       appendMessage();
       setSticky(config.sticky);
       setRandom(config.random);
-      for (const { name, url, key, model } of config.servers) {
-        appendServer({ name, url, key, model });
+      for (const server of config.servers) {
+        appendServer(server);
       }
       setUsed(lastUsed);
       stopLoading();

@@ -32,7 +32,8 @@ const createDefaultConfig = () => ({
 const start = (
   PORT = 8080,
   SETTINGS_PATH = genPath("config.json", process.cwd()),
-  VERBOSE = false
+  VERBOSE = false,
+  TIMEOUT = undefined
 ) => {
   const logger = createVerboseLogger(VERBOSE);
   const localAddress = `http://localhost:${PORT}`;
@@ -47,27 +48,10 @@ const start = (
     }
   };
   readConfig();
-  const writeConfig = (formData) => {
-    const sticky = !!formData.get("sticky");
-    const random = !!formData.get("random");
-    const names = formData.getAll("name");
-    const urls = formData.getAll("url");
-    const keys = formData.getAll("key");
-    const models = formData.getAll("model");
-    const servers = [];
-    for (let i = 0; i < names.length; i++) {
-      const name = names[i];
-      const url = urls[i];
-      const key = keys[i];
-      const model = models[i];
-      servers.push({ name, url, key, model });
-    }
-    config = {
-      sticky,
-      random,
-      servers,
-    };
-    writeFileSync(SETTINGS_PATH, JSON.stringify(config, null, " "));
+
+  const writeConfig = (data) => {
+    config = data;
+    writeFileSync(SETTINGS_PATH, JSON.stringify(data, null, " "));
   };
 
   const getIndicies = (servers, random, sticky) => {
@@ -87,6 +71,16 @@ const start = (
     }
     return indices;
   };
+  const getIndiciesByNames = (servers, ...server_names) => {
+    const indices = [];
+    for (const server of server_names) {
+      const index = servers.findIndex((s) => s.name === server);
+      if (index > -1) {
+        indices.push(index);
+      }
+    }
+    return indices;
+  };
 
   let lastUsedIndex;
   const handler = async (request, response, next) => {
@@ -95,8 +89,8 @@ const start = (
     // read or write config
     if (path === "/config") {
       if (request.method === "POST") {
-        const formData = await request.formData;
-        writeConfig(formData);
+        const data = await request.json;
+        writeConfig(data);
       }
       response
         .set({
@@ -113,65 +107,74 @@ const start = (
       express.static(staticPath)(request, response, next);
       return;
     }
-
-    // Convert to JSON
-    if (path === "/messages") {
-      const data = request.formData;
-      const roles = data.getAll("role");
-      const contents = data.getAll("content");
-      const messages = [];
-      for (let i = 0; i < roles.length; i++) {
-        const [role, content] = [roles[i], contents[i]];
-        messages.push({
-          role,
-          content,
-        });
-      }
-      const res = await fetch(localAddress, {
-        method: "POST",
-        body: JSON.stringify({ messages }),
-      });
-      Readable.fromWeb(res.body).pipe(response);
-      return;
-    }
-    let messages;
+    let messages, server, modelIndex;
     try {
-      ({ messages } = request.json);
+      ({ model: modelIndex, messages, server } = request.json);
     } catch {
       return new Response("Failed to parse JSON", { status: 400 });
     }
+    modelIndex = modelIndex || 0;
     let res;
-    for (const index of getIndicies(
-      config.servers,
-      config.random,
-      config.sticky
-    )) {
-      const { name, url, key, model } = config.servers[index];
-      const body = JSON.stringify({
-        model,
-        messages,
-      });
-      res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
-        body,
-      });
 
-      if (!res.ok) {
-        logger.log(
-          "Failed to fetch",
-          name,
-          res.status,
-          res.statusText,
-          await res.text()
-        );
-        continue;
+    const indices = server
+      ? getIndiciesByNames(config.servers, server)
+      : getIndicies(config.servers, config.random, config.sticky);
+    try {
+      for (const index of indices) {
+        const { name, url, headers, models } = config.servers[index];
+        const model = models[modelIndex] || models[0];
+        const body = JSON.stringify({
+          model,
+          messages,
+        });
+        let timeoutId;
+        let abortController;
+        if (TIMEOUT) {
+          abortController = new AbortController();
+          timeoutId = setTimeout(
+            () => abortController.abort(new Error("Request timed out")),
+            TIMEOUT
+          );
+        }
+        try {
+          res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headers,
+            },
+            body,
+            signal: abortController?.signal,
+          });
+        } catch (error) {
+          res = {
+            status: 500,
+            statusText: error.message,
+            text() {
+              return error.message;
+            },
+          };
+        }
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          logger.log(
+            "Failed to fetch",
+            name,
+            res.status,
+            res.statusText,
+            await res.text()
+          );
+          continue;
+        }
+        lastUsedIndex = index;
+        Readable.fromWeb(res.body).pipe(response);
+        return;
       }
-      lastUsedIndex = index;
-      Readable.fromWeb(res.body).pipe(response);
+    } catch (error) {
+      logger.error(error);
+      response.status(500).send(`Internal Server Error: ${error.message}`);
       return;
     }
   };
@@ -228,30 +231,27 @@ const start = (
   app.use(bodyParser.raw({ type: "*/*" }));
   app.use(formDataMiddleWare());
   app.use(jsonMiddleWare());
-
   app.use(handler);
-  const server = http.createServer(app);
-  server.listen(PORT);
-  logger.log(`Server running at ${localAddress}`);
+  http.createServer(app).listen(PORT, () => {
+    logger.log(`Server running at ${localAddress}`);
+  });
 };
 export default start;
 
-/*
-General Imports:
-None of the below:
-
-Scoped Imports:
-starts with "@"
-
-Itentifier Imports:
-starts with "<identifier>:"
-
-Remote Imports:
-starts with "http://", "https://"
-
-Local Alias:
-starts with "@/"
-
-Local Imports:
-starts with "./"
-*/
+// The following function creats a request to the given url, but immediately aborts it and logs the aborted result from fetch
+const fetchAndAbort = async (url, options, timeout = 0) => {
+  const controller = new AbortController();
+  const { signal } = controller;
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error("Request timed out"));
+  }, timeout);
+  try {
+    const response = await fetch(url, { ...options, signal });
+    console.log("response", response);
+    return response;
+  } catch (error) {
+    console.log("error", error);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};

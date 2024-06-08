@@ -30,10 +30,12 @@ yargs(hideBin(process.argv))
           describe: "",
           type: "string",
         })
-    },(argv)=>{
-      const {verbose, port} = argv;
-      argv.config = argv.config || argv._[1];
-      start(port, argv.config, verbose);
+        .option("timeout", {
+          describe: "Request timeout in milliseconds",
+          type: "number",
+        })
+    },({_, port, config, verbose, timeout})=>{
+      start(port, config || _[1], verbose, timeout);
     })
   .demandCommand(1, `try: ${NAME} serve`)
   .alias("h", "help")
