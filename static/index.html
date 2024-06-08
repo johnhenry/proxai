@@ -57,10 +57,10 @@
           <h1>Robin Failover Proxy</h1>
         </header>
         <main>
-          <form id="form-config" method="POST" action="/config">
+          <form id="form-config">
             <template id="template-server-model">
               <fieldset>
-                <input name="modelx" />
+                <input name="model" />
                 <button type="button" onclick="this.parentElement.remove()">
                   ×
                 </button>
@@ -90,9 +90,7 @@
               <fieldset>
                 <label> Name <input name="name" required /> </label>
                 <label> URL <input name="url" required /> </label>
-                <label> Model <input name="model" required /> </label>
                 <button type="button" class="button-addmodel">Add Model</button>
-                <label> Key <input name="key" type="password" /> </label>
                 <button type="button" class="button-addheader">
                   Add Header
                 </button>
@@ -124,11 +122,15 @@
             </lable>
             <input type="button" value="update" onclick="updateConfig()" />
           </form>
-          <form id="form-test" method="POST" action="/messages">
+          <form id="form-test">
             <h2>Test Chat</h2>
             <label>
               Model Index
-              <input title="model index" name="model" value="0" />
+              <input title="model index" name="model" value="" />
+            </label>
+            <label>
+              Server
+              <input title="server name" name="server" value="" />
             </label>
             <template id="template-message">
               <fieldset>
@@ -181,7 +183,7 @@
         const header = document.getElementById("template-server-model");
         const fieldset = button.parentElement;
         const clone = header.content.cloneNode(true);
-        clone.querySelector("[name=modelx]").value = model || "";
+        clone.querySelector("[name=model]").value = model || "";
         fieldset.insertBefore(clone, button);
       };
       document
@@ -208,8 +210,6 @@
       window.appendServer = ({
         name = null,
         url = null,
-        key = null,
-        model,
         models = [],
         headers = {},
       } = {}) => {
@@ -219,8 +219,6 @@
         const clone = server.content.cloneNode(true);
         clone.querySelector("[name=name]").value = name || "";
         clone.querySelector("[name=url]").value = url || "";
-        clone.querySelector("[name=key]").value = key || "";
-        clone.querySelector("[name=model]").value = model || "";
         const buttonAddModel = clone.querySelector(".button-addmodel");
         const buttonAddHeader = clone.querySelector(".button-addheader");
         Object.entries(headers).forEach(([hname, hvalue]) => {
@@ -258,6 +256,7 @@
           const roles = formData.getAll("role");
           const contents = formData.getAll("content");
           const model = Number(formData.get("model")) || 0;
+          const server = formData.get("server") || "";
           const messages = [];
           for (let i = 0; i < roles.length; i++) {
             const [role, content] = [roles[i], contents[i]];
@@ -268,9 +267,10 @@
           }
           const response = await fetch("/", {
             method: "POST",
-            body: JSON.stringify({ model, messages }),
+            body: JSON.stringify({ server, model, messages }),
             headers: {
               "Content-Type": "application/json",
+              "x-used-option": server,
             },
           });
           if (!response.ok) {
@@ -297,17 +297,13 @@
           const random = !!formData.get("random");
           const names = formData.getAll("name");
           const urls = formData.getAll("url");
-          const keys = formData.getAll("key");
-          const models = formData.getAll("model");
           const allHeaderNames = formData.getAll("hname");
           const allHeaderValues = formData.getAll("hvalue");
-          const allModelValues = formData.getAll("modelx");
+          const allModelValues = formData.getAll("model");
           const headerLengths = [];
           const modelLengths = [];
           for (const fieldset of formConfig.querySelectorAll("&>fieldset")) {
-            modelLengths.push(
-              fieldset.querySelectorAll("[name=modelx]").length
-            );
+            modelLengths.push(fieldset.querySelectorAll("[name=model]").length);
             headerLengths.push(
               fieldset.querySelectorAll("[name=hname]").length
             );
@@ -316,23 +312,22 @@
           const servers = [];
           for (let i = 0; i < names.length; i++) {
             const headers = {};
-            const modelxs = [];
+            const models = [];
             for (let j = 0; j < headerLengths[i]; j++) {
               const name = allHeaderNames.shift();
               const value = allHeaderValues.shift();
               headers[name] = value;
             }
             for (let j = 0; j < modelLengths[i]; j++) {
-              modelxs.push(allModelValues.shift());
+              models.push(allModelValues.shift());
             }
             servers.push({
               name: names[i],
               url: urls[i],
-              models: modelxs,
+              models: models,
               headers,
             });
           }
-          // TODO: remove key, model from config in favor of headers, models
           const response = await fetch("/config", {
             method: "POST",
             body: JSON.stringify({

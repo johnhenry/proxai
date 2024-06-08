@@ -89,7 +89,7 @@ const start = (
     // read or write config
     if (path === "/config") {
       if (request.method === "POST") {
-        const data = await request.json;
+        const data = request.body;
         writeConfig(data);
       }
       response
@@ -107,12 +107,13 @@ const start = (
       express.static(staticPath)(request, response, next);
       return;
     }
-    let messages, server, modelIndex;
+    let messages, modelIndex;
     try {
-      ({ model: modelIndex, messages, server } = request.json);
-    } catch {
+      ({ model: modelIndex, messages } = request.body);
+    } catch (error) {
       return new Response("Failed to parse JSON", { status: 400 });
     }
+    const server = request.get("x-used-option");
     modelIndex = modelIndex || 0;
     let res;
 
@@ -121,7 +122,8 @@ const start = (
       : getIndicies(config.servers, config.random, config.sticky);
     try {
       for (const index of indices) {
-        const { name, url, headers, models } = config.servers[index];
+        const server = config.servers[index];
+        const { name, url, headers, models = [] } = server;
         const model = models[modelIndex] || models[0];
         const body = JSON.stringify({
           model,
@@ -155,7 +157,6 @@ const start = (
             },
           };
         }
-
         clearTimeout(timeoutId);
 
         if (!res.ok) {
@@ -167,6 +168,8 @@ const start = (
             await res.text()
           );
           continue;
+        } else {
+          logger.log("Success", name);
         }
         lastUsedIndex = index;
         Readable.fromWeb(res.body).pipe(response);
@@ -178,59 +181,9 @@ const start = (
       return;
     }
   };
-  const bufferToFormData = (body) => {
-    const rawData = body.toString().split("\r\n");
-    const boundary = rawData.shift();
-    const contentStart = "Content-Disposition: form-data; name=";
-    let datum = {};
-    const data = [];
-    for (let i = 0; i < rawData.length; i++) {
-      const line = rawData[i];
-      if (line.startsWith(contentStart)) {
-        datum.name = line.substring(contentStart.length + 1, line.length - 1);
-      } else if (line.startsWith(boundary)) {
-        data.push(datum);
-        datum = {};
-      } else {
-        datum.value = datum.value || "" + line;
-      }
-    }
-    const formData = new FormData();
-    for (const { name, value } of data) {
-      formData.append(name, value);
-    }
-    return formData;
-  };
-
-  const formDataMiddleWare = () => (req, _, next) => {
-    try {
-      req.formData = bufferToFormData(req.body);
-    } finally {
-      next();
-    }
-  };
-
-  const bufferToJSON = (body) => {
-    const rawData = body.toString();
-    try {
-      return JSON.parse(rawData);
-    } catch {
-      return {};
-    }
-  };
-
-  const jsonMiddleWare = () => (req, _, next) => {
-    try {
-      req.json = bufferToJSON(req.body);
-    } finally {
-      next();
-    }
-  };
 
   const app = express();
-  app.use(bodyParser.raw({ type: "*/*" }));
-  app.use(formDataMiddleWare());
-  app.use(jsonMiddleWare());
+  app.use(express.json());
   app.use(handler);
   http.createServer(app).listen(PORT, () => {
     logger.log(`Server running at ${localAddress}`);
