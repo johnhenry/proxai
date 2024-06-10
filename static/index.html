@@ -343,6 +343,10 @@
             response.json().then((config) => {
               console.log("config updated:", { config });
             });
+          } else {
+            response.text().then((text) => {
+              alert(text);
+            });
           }
         } finally {
           stopLoading();

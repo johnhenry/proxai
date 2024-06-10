@@ -1,5 +1,4 @@
 import express from "express";
-import bodyParser from "body-parser";
 import { Readable } from "stream";
 import { readFileSync, writeFileSync } from "node:fs";
 import http from "node:http";
@@ -33,7 +32,9 @@ const start = (
   PORT = 8080,
   SETTINGS_PATH = genPath("config.json", process.cwd()),
   VERBOSE = false,
-  TIMEOUT = undefined
+  TIMEOUT = undefined,
+  WEBUI = false,
+  WRITABLE_CONFIG = false
 ) => {
   const logger = createVerboseLogger(VERBOSE);
   const localAddress = `http://localhost:${PORT}`;
@@ -89,8 +90,13 @@ const start = (
     // read or write config
     if (path === "/config") {
       if (request.method === "POST") {
-        const data = request.body;
-        writeConfig(data);
+        if (WRITABLE_CONFIG) {
+          const data = request.body;
+          writeConfig(data);
+        } else {
+          response.status(403).send("Config is not writable.");
+          return;
+        }
       }
       response
         .set({
@@ -102,16 +108,21 @@ const start = (
     }
     // Serve Static Files
     if (request.method === "GET") {
-      const staticPath = genPath("static", dirname(import.meta.url));
-      console.log(staticPath);
-      express.static(staticPath)(request, response, next);
+      if (WEBUI) {
+        const staticPath = genPath("static", dirname(import.meta.url));
+        console.log(staticPath);
+        express.static(staticPath)(request, response, next);
+      } else {
+        response.status(404).send(`Cannot GET ${path}`);
+      }
       return;
     }
     let messages, modelIndex;
     try {
       ({ model: modelIndex, messages } = request.body);
     } catch (error) {
-      return new Response("Failed to parse JSON", { status: 400 });
+      response.status(400).send(`Failed to parse JSON: ${error.message}`);
+      return;
     }
     const server = request.get("x-used-option");
     modelIndex = modelIndex || 0;

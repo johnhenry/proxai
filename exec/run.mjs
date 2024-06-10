@@ -27,15 +27,27 @@ yargs(hideBin(process.argv))
           type: "number",
         })
         .option("config", {
-          describe: "",
+          alias: "c",
+          describe: "Location of config file. Default is 'config.json' in current directory",
           type: "string",
         })
         .option("timeout", {
           describe: "Request timeout in milliseconds",
           type: "number",
+        }).option("webui", {
+          alias: "w",
+          describe: "Enables Web UI for configruation at /",
+          default:false,
+          type: "boolean",
         })
-    },({_, port, config, verbose, timeout})=>{
-      start(port, config || _[1], verbose, timeout);
+        .option("writableconfig", {
+          alias: "r",
+          describe: "Make config writable. ",
+          default:false,
+          type: "boolean",
+        })
+    },({_, port, config, verbose, timeout, webui, writableconfig})=>{
+      start(port, config || _[1], verbose, timeout, webui, writableconfig);
     })
   .demandCommand(1, `try: ${NAME} serve`)
   .alias("h", "help")

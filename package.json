@@ -1,10 +1,10 @@
 {
-  "name": "robin-failover-proxy",
+  "name": "proxai",
   "version": "0.0.0",
   "description": "",
   "main": "./exec/run.mjs",
   "bin": {
-    "rfp": "./exec/run.mjs"
+    "proxai": "./exec/run.mjs"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
