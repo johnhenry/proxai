@@ -1,4 +1,6 @@
-# Robin Failover Proxy
+# Proxai
+
+<img src="./static/logo.webp" style="width:256px;height:256px">
 
 A failover proxy for use with APIs that are compatible with the Open AI API.
 
@@ -33,11 +35,5 @@ create a config.json file
 ```
 
 ```shell
-rfp --port 8080 <path to config>
-```
-
-##
-
-```shell
-node index.mjs
+proxai --port 8095 <path to config>
 ```

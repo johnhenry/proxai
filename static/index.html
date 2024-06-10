@@ -48,13 +48,20 @@
           }
         }
       }
+      header img {
+        width: 128px;
+        height: 128px;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
     <main>
       <section>
         <header>
-          <h1>Robin Failover Proxy</h1>
+          <h1>
+            <img title="logo" src="./logo.webp" />Proxai - Failover Proxy for AI
+          </h1>
         </header>
         <main>
           <form id="form-config">
@@ -155,7 +162,7 @@
             >
               +
             </button>
-            <input type="button" value="test" onclick="sendMessage()" />
+            <input type="button" value="Send" onclick="sendMessage()" />
           </form>
         </main>
       </section>
