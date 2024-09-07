@@ -9,9 +9,10 @@ const genPath = (base, parent) => {
   }
   return join(dirname(parent), base);
 };
-const PORT = 8080;
+const DEFAULT_CONFIG = "proxai.json";
+const PORT = 11434;
 const localAddress = `http://localhost:${PORT}`;
-const SETTINGS_PATH = genPath("config.json", import.meta.url);
+const SETTINGS_PATH = genPath(DEFAULT_CONFIG, import.meta.url);
 let config;
 const createDefaultConfig = () => ({
   sticky: false,

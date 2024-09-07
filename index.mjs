@@ -27,10 +27,10 @@ const createDefaultConfig = () => ({
   random: false,
   servers: [],
 });
-
+const DEFAULT_CONFIG = "proxai.json";
 const start = (
-  PORT = 8080,
-  SETTINGS_PATH = genPath("config.json", process.cwd()),
+  PORT = 11434,
+  SETTINGS_PATH = genPath(DEFAULT_CONFIG, process.cwd()),
   VERBOSE = false,
   TIMEOUT = undefined,
   WEBUI = false,

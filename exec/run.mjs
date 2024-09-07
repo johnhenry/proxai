@@ -28,7 +28,7 @@ yargs(hideBin(process.argv))
         })
         .option("config", {
           alias: "c",
-          describe: "Location of config file. Default is 'config.json' in current directory",
+          describe: "Location of config file. Default is 'proxai.json' in current directory",
           type: "string",
         })
         .option("timeout", {
