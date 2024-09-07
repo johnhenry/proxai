@@ -1,6 +1,6 @@
 {
   "name": "proxai",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "./exec/run.mjs",
   "bin": {
