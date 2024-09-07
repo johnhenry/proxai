@@ -1,0 +1,1 @@
+{"sticky":false,"random":false,"servers":[{"name":"test-server-1","url":"http://localhost:54321","headers":{},"models":["model1","model2"]},{"name":"test-server-2","url":"http://localhost:65432","headers":{},"models":["model3"]}]}
