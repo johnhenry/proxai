@@ -1,4 +1,21 @@
 #!/usr/bin/env node --no-warnings
+
+/**
+ * CLI for running the proxai server
+ * 
+ * Usage: proxai serve [config] [options]
+ * 
+ * Options:
+ *   --verbose, -v       Enable verbose mode (default: false)
+ *   --port, -p          Specify the server port (default: 11434)
+ *   --config, -c        Location of config file (default: 'proxai.json' in current directory)
+ *   --timeout           Request timeout in milliseconds
+ *   --webui, -w         Enable Web UI for configuration at / (default: false)
+ *   --writableconfig, -r Make config writable (default: false)
+ *   --version           Show version number
+ *   --help, -h          Show help
+ */
+
 import PACKAGE from "../package.json" with { type: "json" };
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";

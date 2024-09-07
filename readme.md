@@ -75,10 +75,64 @@ If you prefer to install Proxai locally or work with the source code:
 2. Start the Proxai server:
 
 ```shell
-proxai --port 11434 /path/to/your/config.json
+proxai serve --port 11434 /path/to/your/config.json
 ```
 
 3. Use the proxy in your application by pointing your OpenAI-compatible API calls to `http://localhost:11434` (or the appropriate host and port).
+
+### CLI Options
+
+When running the Proxai server, you can use the following command-line options:
+
+- `serve [config]`: Start the Proxai server (required command)
+- `--verbose`, `-v`: Enable verbose mode (default: false)
+- `--port`, `-p`: Specify the server port (default: 11434)
+- `--config`, `-c`: Location of config file (default: 'proxai.json' in current directory)
+- `--timeout`: Request timeout in milliseconds
+- `--webui`, `-w`: Enable Web UI for configuration at / (default: false)
+- `--writableconfig`, `-r`: Make config writable (default: false)
+- `--version`: Show version number
+- `--help`, `-h`: Show help
+
+Example usage with CLI options:
+
+```shell
+proxai serve --port 3000 --verbose --config ./my-config.json --webui
+```
+
+This command starts the Proxai server on port 3000, enables verbose mode, uses the configuration file 'my-config.json', and enables the Web UI.
+
+### Web UI
+
+Proxai provides a web-based user interface for easy configuration and testing. To access the Web UI, start the Proxai server with the `--webui` flag:
+
+```shell
+proxai serve --webui --port 3000 /path/to/your/config.json
+```
+
+Then, open your web browser and navigate to `http://localhost:3000` (or the appropriate port you specified).
+
+The Web UI consists of two main sections:
+
+1. **Config**: This section allows you to configure your Proxai servers and routing options.
+
+   - Use the "Sticky" and "Random" checkboxes to set your routing preferences.
+   - Add, edit, or remove server configurations using the provided fields.
+   - For each server, you can specify:
+     - Name: A unique identifier for the server
+     - URL: The API endpoint URL
+     - Models: The available models for this server (use the "Add Model" button to add multiple models)
+     - Headers: Any required headers for authentication or other purposes (use the "Add Header" button to add multiple headers)
+   - Click the "update" button to save your configuration changes.
+
+2. **Test Chat**: This section allows you to test your Proxai configuration with a simple chat interface.
+   - Select the Model Index and Server you want to test.
+   - Choose the role (system or user) for each message.
+   - Enter your message content in the provided text area.
+   - Click the "Send" button to send your message and receive a response.
+   - Use the "+" button to add more message inputs for multi-turn conversations.
+
+The Web UI provides an intuitive way to manage your Proxai configuration and test your setup without the need for external tools or writing code.
 
 ### Common Scenarios
 
