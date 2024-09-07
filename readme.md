@@ -75,10 +75,10 @@ If you prefer to install Proxai locally or work with the source code:
 2. Start the Proxai server:
 
 ```shell
-proxai --port 8095 /path/to/your/config.json
+proxai --port 11434 /path/to/your/config.json
 ```
 
-3. Use the proxy in your application by pointing your OpenAI-compatible API calls to `http://localhost:8095` (or the appropriate host and port).
+3. Use the proxy in your application by pointing your OpenAI-compatible API calls to `http://localhost:11434` (or the appropriate host and port).
 
 ### Common Scenarios
 
@@ -134,7 +134,7 @@ const { Configuration, OpenAIApi } = require("openai");
 
 const configuration = new Configuration({
   apiKey: "your-api-key",
-  basePath: "http://localhost:8095", // Proxai server address
+  basePath: "http://localhost:11434", // Proxai server address
 });
 
 const openai = new OpenAIApi(configuration);

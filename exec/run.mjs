@@ -23,7 +23,7 @@ yargs(hideBin(process.argv))
         .option("port", {
           alias: "p",
           describe: "server port",
-          default: 8095,
+          default: 11434,
           type: "number",
         })
         .option("config", {
