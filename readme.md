@@ -2,6 +2,8 @@
 
 <img src="./static/logo.webp" style="width:256px;height:256px">
 
+> Previously published as `proxai` (unscoped, up to 0.0.2). Versions continue here as `@johnhenry/proxai`; the `proxai` command name is unchanged.
+
 ## Overview
 
 Proxai is a failover proxy designed for use with APIs that are compatible with the OpenAI API. It allows you to seamlessly switch between different AI model providers, ensuring high availability and flexibility in your AI-powered applications.
@@ -20,7 +22,7 @@ Key features:
 To install Proxai globally as a CLI tool, you can use npm:
 
 ```shell
-npm install -g proxai
+npm install -g @johnhenry/proxai
 ```
 
 This will make the `proxai` command available system-wide.
@@ -32,7 +34,7 @@ If you prefer to install Proxai locally or work with the source code:
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/proxai.git
+   git clone https://github.com/johnhenry/proxai.git
    cd proxai
    ```
 

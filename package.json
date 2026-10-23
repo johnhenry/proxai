@@ -1,18 +1,17 @@
 {
-  "name": "proxai",
-  "version": "0.0.3",
+  "name": "@johnhenry/proxai",
+  "version": "0.1.0",
   "description": "",
   "main": "./exec/run.mjs",
   "bin": {
     "proxai": "./exec/run.mjs"
   },
   "scripts": {
-    "test": "node --test tests/index.test.mjs",
+    "test": "node --test tests/smoke.test.mjs",
     "deno": "deno run --allow-net --allow-read --allow-write --allow-env index.deno.mjs",
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "test:legacy": "node --test tests/index.test.mjs"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",
     "yargs": "^17.7.2"
@@ -21,5 +20,21 @@
     "express": "^4.19.2",
     "node-fetch": "^3.3.1"
   },
-  "type": "module"
+  "type": "module",
+  "author": "John Henry",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnhenry/proxai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johnhenry/proxai/issues"
+  },
+  "homepage": "https://github.com/johnhenry/proxai#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }

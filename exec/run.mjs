@@ -19,7 +19,7 @@
 import PACKAGE from "../package.json" with { type: "json" };
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-const NAME = PACKAGE.name;
+const NAME = PACKAGE.name.split("/").pop(); // bin name stays unscoped
 const VERSION = PACKAGE.version;
 import start from "../index.mjs";
 yargs(hideBin(process.argv))
